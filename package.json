@@ -1,0 +1,32 @@
+{
+  "name": "binary-creator",
+  "version": "0.0.1",
+  "description": "生成预编译库",
+  "author": "James Chen",
+  "main": "main.js",
+  "main-menu": {
+    "快捷工具/生成预编译库": { 
+      "message": "my-package:open"
+    }
+  },
+  "panel": {
+    "main": "panel/index.js",
+    "type": "dockable",
+    "title": "生成预编译库",
+    "width": 500,
+    "height": 700,
+    "profiles": {
+      "project": {
+        "title": ""
+      },
+      "local": {
+        "platform": "android",
+        "debug": false,
+        "sourceMaps": false,
+        "apiLevel": "",
+        "appABIs": [],
+        "vsVersion": "auto"
+      }
+    }
+  }
+}
