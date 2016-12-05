@@ -22,22 +22,22 @@ exports.data = function () {
 };
 
 exports.created = function () {
-    Editor.Ipc.sendToMain('app:query-cocos-templates', (error, list) => {
-        if (error)
-            return Editor.warn(error);
-        list.forEach((item) => {
-            this.templates.push(item);
-        });
+    // Editor.Ipc.sendToMain('app:query-cocos-templates', (error, list) => {
+    //     if (error)
+    //         return Editor.warn(error);
+    //     list.forEach((item) => {
+    //         this.templates.push(item);
+    //     });
 
-        if (!this.data) return;
-        var template = this.data.template;
-        if (list.length <= 0) {
-            return this.set('profiles.local.template', '');
-        }
-        if (list.indexOf(template) === -1) {
-            this.set('profiles.local.template', list[0]);
-        }
-    });
+    //     if (!this.data) return;
+    //     var template = this.data.template;
+    //     if (list.length <= 0) {
+    //         return this.set('profiles.local.template', '');
+    //     }
+    //     if (list.indexOf(template) === -1) {
+    //         this.set('profiles.local.template', list[0]);
+    //     }
+    // });
 };
 
 exports.directives = {};

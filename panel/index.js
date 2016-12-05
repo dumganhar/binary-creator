@@ -2,13 +2,14 @@
 
 var createPlatforms = function () {
     var platforms = [];
-    platforms.push({ value: 'android', text: 'Android' });
+    
     if (process.platform === 'darwin') {
         platforms.push({ value: 'ios', text: 'iOS' });
         platforms.push({ value: 'mac', text: 'Mac' });
     } else if (process.platform === 'win32') {
         platforms.push({ value: 'win32', text: 'Windows' });
     }
+    platforms.push({ value: 'android', text: 'Android' });
     return platforms;
 };
 
@@ -147,9 +148,6 @@ var template = `
 
     <!-- platform -->
     <android-list 
-         v-if="data.platform==='android'"
-         v-bind:data="data"
-         v-bind:project="project"
      ></android-list>
     
     <windows-list
@@ -203,14 +201,20 @@ Editor.Panel.extend({
   ready () {
     Editor.log("ready...");
 
-    var profilesLocal = this.profiles.local;
-    var profilesProject = this.profiles.project;
+    Editor.log("this.profiles:" + this.profiles);
 
-    Editor.log("ready 2...,data: " + profilesLocal.data);
-    var data = deepCopyObject(profilesLocal.data, {});
-    var project = deepCopyObject(profilesProject.data, {});
+    // for (var k in this.profiles.local)
+    // {
+    //   Editor.log("this.profiles[" + k + ']=' + this.profiles.local[k] );
+    // }
+    // var profilesLocal = this.profiles.local;
+    // var profilesProject = this.profiles.project;
 
-    Editor.log("data:" + data);
+    // Editor.log("ready 2...,data: " + profilesLocal.data);
+    // var data = deepCopyObject(profilesLocal.data, {});
+    // var project = deepCopyObject(profilesProject.data, {});
+
+    // Editor.log("data:" + data);
 
     var vm = this._vm = new window.Vue({
       el: this.shadowRoot,
@@ -218,8 +222,8 @@ Editor.Panel.extend({
           platforms: createPlatforms(),
           all: false,
           task: '',
-          data: data,
-          project: project,
+          data: {platform: 'android', appABIs: ['armeabi'], apiLevel: 'android-13'},
+          project: {},
           buildState: 'sleep',
           buildProgress: 0
       },
@@ -229,7 +233,208 @@ Editor.Panel.extend({
         'windows-list': WindowsList,
         'ios-list': IOSList,
         'mac-list': MacList
-      }
+      },
+
+      watch: {
+        data: {
+            handler (val) {
+                Editor.log("watch, data: " + val);
+                // if (!profilesLocal.save) return;
+                // deepCopyObject(val, profilesLocal.data);
+                // profilesLocal.save();
+            },
+            deep: true
+        },
+        project: {
+            handler (val) {
+                Editor.log("watch, project: " + val);
+                // if (!profilesProject.save) return;
+                // deepCopyObject(val, profilesProject.data);
+                // profilesProject.save();
+            },
+            deep: true
+        }
+      },
+
+      methods: {
+        _onOpenCompileLogFile (event) {
+            event.stopPropagation();
+            // Editor.Ipc.sendToMain('app:open-cocos-console-log');
+        },
+
+        _onChooseDistPathClick (event) {
+            event.stopPropagation();
+            // let res = Editor.Dialog.openFile({
+            //     defaultPath: buildUtils.getAbsoluteBuildPath(data.buildPath),
+            //     properties: ['openDirectory']
+            // });
+            // if (res && res[0]) {
+            //     if (Path.contains(Editor.projectInfo.path, res[0])) {
+            //         this.data.buildPath = Path.relative(Editor.projectInfo.path, res[0]).replace(/\\/g, '/');
+            //         if (this.data.buildPath === '') {
+            //             this.data.buildPath = './';
+            //         } 
+            //     }
+            //     else {
+            //         this.data.buildPath = res[0];
+            //     }
+            // }
+        },
+
+        _onShowInFinderClick (event) {
+            event.stopPropagation();
+            // let buildPath = buildUtils.getAbsoluteBuildPath(data.buildPath);
+            // if (!Fs.existsSync(buildPath)) {
+            //     Editor.warn('%s not exists!', buildPath);
+            //     return;
+            // }
+            // Electron.shell.showItemInFolder(buildPath);
+            // Electron.shell.beep();
+        },
+
+        _onSelectAllCheckedChanged (event) {
+            // if (!this.scenes) {
+            //     return;
+            // }
+
+            // let startScene = this.project.startScene;
+            // for (let i = 0; i < this.scenes.length; i++) {
+            //     let item = this.scenes[i];
+            //     if (
+            //         item.text.startsWith('db://assets/resources/') ||
+            //         startScene === item.value
+            //     ) {
+            //         continue;
+            //     }
+
+            //     item.checked = event.detail.value;
+            //     var index = this.project.excludeScenes.indexOf(item.value);
+            //     if (!item.checked && index === -1) {
+            //         this.project.excludeScenes.push(item.value);
+            //     } else if (item.checked && index !== -1) {
+            //         this.project.excludeScenes.splice(index, 1);
+            //     }
+            // }
+        },
+
+        startTask (task, options) {
+            // this.task = task;
+            // // 将项目设置中的模块排除列表发给 Builder
+            // Editor.Profile.load('profile://project/project.json', (err, profile) => {
+            //     options.excludedModules = profile.data['excluded-modules'];
+            //     Editor.Ipc.sendToMain('builder:start-task', task, options);
+            // });
+        },
+
+        _onBuildClick (event) {
+            event.stopPropagation();
+
+            // Editor.Ipc.sendToPanel('scene', 'scene:query-dirty-state', (err, state) => {
+            //     if (state.dirty) {
+            //         Editor.error(state.name + ' ' + Editor.T('BUILDER.error.dirty_info'));
+            //         return;
+            //     }
+
+            //     this._build();
+            // });
+        },
+
+        _build () {
+            // var buildPath = buildUtils.getAbsoluteBuildPath(data.buildPath);
+            // var buildDir = Path.win32.dirname(buildPath);
+
+            // if (!Fs.existsSync(buildDir)) {
+            //     Editor.error(Editor.T('BUILDER.error.build_dir_not_exists', {buildDir: buildDir}));
+            //     return;
+            // }
+
+            // if (buildPath.indexOf(' ') !== -1) {
+            //     Editor.error(Editor.T('BUILDER.error.build_path_contains_space'));
+            //     return;
+            // }
+
+            // var containsChinese = /.*[\u4e00-\u9fa5]+.*$/.test(buildPath);
+            // if (containsChinese) {
+            //     Editor.error(Editor.T('BUILDER.error.build_path_contains_chinese'));
+            //     return;
+            // }
+
+            // // project name should be 0-9 a-z A-Z _ , android should also not include -
+            // var platform = this.data.platform;
+            // var regex;
+            // if (platform === 'android') {
+            //     regex = /^[a-zA-Z0-9_]*$/;
+            // } else {
+            //     regex = /^[a-zA-Z0-9_-]*$/;
+            // }
+
+            // if (!regex.test(this.project.title)) {
+            //     Editor.error(Editor.T('BUILDER.error.project_name_not_legal'));
+            //     return;
+            // }
+
+            // let packageName = this.project.packageName;
+            // if (platform === 'ios' || platform === 'android' || platform === 'mac') {
+            //     // package name should be 0-9 a-z A-Z _ - .
+            //     if (platform === 'android') {
+            //         regex = /^[a-zA-Z0-9_.]*$/;
+            //     } else {
+            //         regex = /^[a-zA-Z0-9_.-]*$/;
+            //     }
+
+            //     if (!regex.test(packageName)) {
+            //         Editor.error(Editor.T('BUILDER.error.package_name_not_legal'));
+            //         return;
+            //     }
+
+            //     let regions = packageName.split('.');
+            //     for (let i = 0; i < regions.length; i++) {
+            //         if (!isNaN(regions[i][0])) {
+            //             Editor.error(Editor.T('BUILDER.error.package_name_start_with_number'));
+            //             return;
+            //         }
+            //     }
+            // }
+
+            // Editor.Ipc.sendToAll('builder:state-changed', 'ready', 0);
+
+            // var buildUuidList = this.scenes.filter(function (scene) {
+            //     return scene.checked;
+            // }).map(function (scene) {
+            //     return scene.value;
+            // });
+
+            // if (buildUuidList.length > 0) {
+            //     let options = buildUtils.getOptions(profilesProject, profilesLocal);
+            //     options.scenes = buildUuidList;
+
+            //     this.startTask('build', options);
+            //     Editor.Ipc.sendToMain('metrics:track-event', {
+            //         category: 'Project',
+            //         action: 'Build',
+            //         label: platform
+            //     });
+            // }
+            // else {
+            //     Editor.error(Editor.T('BUILDER.error.select_scenes_to_build'));
+            // }
+        },
+
+        _onCompileClick (event) {
+            event.stopPropagation();
+            // this.startTask('compile', buildUtils.getOptions(profilesProject, profilesLocal));
+        },
+
+        _onStopCompileClick: function (event) {
+            event.stopPropagation();
+            // Editor.Ipc.sendToMain('app:stop-compile');
+        },
+
+        _onPreviewClick (event) {
+            event.stopPropagation();
+            // Editor.Ipc.sendToMain('app:run-project', buildUtils.getOptions(profilesProject, profilesLocal));
+        }
+    }
     });
 
     Editor.log("test");
@@ -242,11 +447,5 @@ Editor.Panel.extend({
         this.task = result.task;
         Editor.Ipc.sendToAll('builder:state-changed', result.state, result.progress);
     });
-
-    Editor.log("platforms size=" + vm.data.platforms.length);
-      // for (var k in this._vm.data.platforms)
-      // {
-      //   Editor.log("[" + k + "]=" + data.platforms[k]);
-      // }
   },
 });
