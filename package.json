@@ -6,27 +6,16 @@
   "main": "main.js",
   "main-menu": {
     "快捷工具/生成预编译库": { 
-      "message": "my-package:open"
+      "message": "binary-creator:open"
     }
   },
   "panel": {
-    "main": "panel/index.js",
+    "main": "panel/panel.js",
     "type": "dockable",
     "title": "生成预编译库",
-    "width": 500,
-    "height": 700,
-    "profiles": {
-      "project": {
-        "title": ""
-      },
-      "local": {
-        "platform": "android",
-        "debug": false,
-        "sourceMaps": false,
-        "apiLevel": "",
-        "appABIs": [],
-        "vsVersion": "auto"
-      }
-    }
+    "width": 600,
+    "min-width": 500,
+    "height": 220,
+    "min-height": 220
   }
 }
