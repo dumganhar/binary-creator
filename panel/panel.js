@@ -1,27 +1,20 @@
 'use strict';
 
-const IconvLite = require('iconv-lite');
 const Path = require("path");
 const Fs = require('fire-fs');
-
-// only used on windows
-let pyPath = Editor.url('unpack://utils/Python27/python');
-let cocosConsoleRoot;
-let cocosRoot;
-let cocosConsoleBin;
-let nativeLogPath;
 
 var createPlatforms = function() {
     var platforms = [];
 
     if (process.platform === 'darwin') {
         platforms.push({
-            value: 'ios',
-            text: 'iOS'
-        });
-        platforms.push({
             value: 'mac',
             text: 'Mac'
+        });
+
+        platforms.push({
+            value: 'ios',
+            text: 'iOS'
         });
     } else if (process.platform === 'win32') {
         platforms.push({
@@ -36,97 +29,23 @@ var createPlatforms = function() {
     return platforms;
 };
 
+function compilePrebuiltLibs(platform, archs, androidApiLevel) {
+    let args = ['gen-libs', '-m', 'release', '-p', platform];
 
-function getCocosSpawnProcess(args, spawnOpts) {
-    var child;
-
-    let error = initCocosBin();
-    if (error) {
-        return [error, child];
-    }
-
-    args = [cocosConsoleBin].concat(args);
-
-    try {
-        if (process.platform === 'darwin') {
-            child = Spawn('sh', args, spawnOpts);
+    if (platform === 'android') {
+        if (archs) {
+            args.push('--app-abi');
+            args.push(archs);
         }
-        else {
-            // use the internal python on windows
-            child = Spawn(pyPath, args, spawnOpts);
-        }    
-    }
-    catch (err) {
-        error = err;
+
+        if (androidApiLevel) {
+            args.push('--ap');
+            args.push(androidApiLevel);
+        }
     }
 
-    return {error:error, child:child};
-}
-
-function initCocosBin () {
-    let profileData = Editor.App._profile.data;
-
-    cocosRoot = profileData['use-default-cpp-engine'] ? Editor.builtinCocosRoot : profileData['cpp-engine-path'];
-    console.log('Cocos2dx root: ' + cocosRoot);
-
-    if (cocosRoot.indexOf(' ') !== -1) {
-        return new Error(`Cocos2dx root [${cocosRoot}] can\'t include space.`);
-    }
-    
-    cocosConsoleRoot = Path.join(cocosRoot, 'tools/cocos2d-console/bin');
-
-    if (process.platform === 'darwin') {
-        cocosConsoleBin = Path.join(cocosConsoleRoot, 'cocos');
-    }
-    else {
-        cocosConsoleBin = Path.join(cocosConsoleRoot, 'cocos.py');
-    }
-
-    return null;
-}
-
-function compilePrebuiltLibs () {
-    //cjh let err = initCocosEnv();
-    // if (err) {
-    //     Editor.error(err);
-    //     return;
-    // }
-
-    let args = ['gen-libs', '-m', 'release', '-p', 'android'];
-
-    let spawnOpts = {
-        // cwd: cocosConsoleRoot
-    };
-
-    Editor.log(`Start to compile cocos prebuilt libs`);//. The log file path [ ${nativeLogPath} ]`);
-
-    Editor.Ipc.sendToMain('binary-creator:test', args, spawnOpts);
-
-    // let ret = getCocosSpawnProcess(args, spawnOpts);
-    // if (ret.error) {
-    //     Editor.error(ret.error);
-    //     return;
-    // }
-
-    // _prebuiltProcess = ret.child;
-
-    // handleChildProcess(_prebuiltProcess, {
-    //     logFilePath: nativeLogPath,
-    //     disableEditorLog: !showLogInConsole
-    // },
-    // (err, code) => {
-    //     if (err) {
-    //         Editor.error(err);
-    //         return;
-    //     }
-
-    //     if (code !== 0) {
-    //         Editor.error( new Error(`Failed compile cocos prebuilt libs. The log file path [ ${nativeLogPath}]`) );
-    //         return;
-    //     }
-
-    //     Editor.log('Success compile cocos prebuilt libs.');
-    // });
+    Editor.log(`Start to compile cocos prebuilt libs`);
+    Editor.Ipc.sendToMain('binary-creator:start-compile', args, {});
 }
 
 var style = `
@@ -155,12 +74,12 @@ var style = `
 `;
 
 var template = `
-    <h2>生成预编译库</h2>
+    <h2>${Editor.T('binary-creator.title')}</h2>
 
     <section>
-        <ui-prop name="请选择平台"
-            v-disabled=task==='compile'>
-            <ui-select class="flex-1" v-value="selectedPlatform">
+        <ui-prop name="${Editor.T('binary-creator.select_platform')}">
+            <ui-select class="flex-1" v-value="selectedPlatform"
+            >
                 <template v-for="item in platforms">
                     <option v-value="item.value">{{item.text}}</option>
                 </template>
@@ -169,7 +88,7 @@ var template = `
 
         <ui-prop name="API Level"
             v-if="selectedPlatform === 'android'"
-            v-disabled=task==='compile'>
+            >
             <ui-select class="flex-1" v-value="android.selectedAPILevel">
                 <template v-for="item in android.apiLevels">
                     <option v-bind:value="item">{{item}}</option>
@@ -179,7 +98,7 @@ var template = `
 
         <ui-prop name="APP ABI" auto-height
             v-if="selectedPlatform === 'android'"
-            v-disabled=task==='compile'>
+            >
             <div class="flex-1 layout vertical">
                 <ui-checkbox class="item" v-value="android.armeabi">
                     armeabi
@@ -196,17 +115,17 @@ var template = `
             </div>
         </ui-prop>
 
-        <ui-loader color="rgba(0,0,0,0.6)"
-            v-if="task==='compile'">
-            正在编译...
+        <ui-loader id='loader' color="rgba(0,0,0,0.6)"
+            >
+            ${Editor.T('binary-creator.waiting')}
         </ui-loader>
     </section>
 
     <footer class="layout horizontal">
         <ui-button class="green"
             v-on:confirm="_onCompileClick"
-            v-disabled=task==='compile'>
-            编译
+            >
+            ${Editor.T('binary-creator.compile')}
         </ui-button>
     </footer>
 `;
@@ -215,18 +134,32 @@ Editor.Panel.extend({
     style: style,
     template: template,
 
+    $: {
+        loader: '#loader'
+    },
     messages: {
+        'binary-creator:onCompileSucceed' (event) {
+            Editor.log("receive compile succeed event.");
+            this.$loader.hidden = true;
+        },
+        'binary-creator:onCompileFailed' (event, errorStr) {
+            Editor.log(`receive compile failed event, error: ${errorStr}`);
+            this.$loader.hidden = true;
+        }
     },
 
-    ready() {
-        Editor.log("ready...");
+    ready: function() {
+        Editor.log("binary-creator ready...");
 
+        let loader = this.$loader;
+        loader.hidden = true;
+
+        let platforms = createPlatforms();
         var vm = this._vm = new window.Vue({
             el: this.shadowRoot,
             data: {
-                platforms: createPlatforms(),
-                selectedPlatform: '',
-                task: '',
+                platforms: platforms,
+                selectedPlatform: platforms[0].value,
                 android: {
                     apiLevels: [],
                     selectedAPILevel: '',
@@ -271,40 +204,12 @@ Editor.Panel.extend({
                             this.android.selectedAPILevel = list[0];
                         }
                     });
-
-                    Editor.Profile.load('profile://global/settings.json', (err, profile) => {
-                        if (err) {
-                            Editor.error(`Get the build path failed. Please Build the project first.`);
-                            return;
-                        }
-
-                        var useDefaultEngine = profile.data['use-default-cpp-engine'];
-                        var userEnginePath = profile.data['cpp-engine-path'];
-                        var builtinEnginePath = Path.join(Editor.url('app://'), '..', 'cocos2d-x');
-
-                        Editor.log(`useDefaultEngine: ${useDefaultEngine}`);
-                        Editor.log(`userEnginePath: ${userEnginePath}`);
-                        Editor.log(`builtinEnginePath: ${builtinEnginePath}`);
-                    });
-                },
-
-                _onOpenCompileLogFile(event) {
-                    event.stopPropagation();
-                    // Editor.Ipc.sendToMain('app:open-cocos-console-log');
-                },
-
-                startTask(task, options) {
-                    this.task = task;
-                    // // 将项目设置中的模块排除列表发给 Builder
-                    // Editor.Profile.load('profile://project/project.json', (err, profile) => {
-                    //     options.excludedModules = profile.data['excluded-modules'];
-                    //     Editor.Ipc.sendToMain('builder:start-task', task, options);
-                    // });
                 },
 
                 _onCompileClick(event) {
                     event.stopPropagation();
                     Editor.log(`_onCompileClick`);
+                    let archs = [];
 
                     if (this.selectedPlatform == '') {
                         Editor.error(`Please select a platform!`);
@@ -316,22 +221,25 @@ Editor.Panel.extend({
                             Editor.error(`Please select an architecture!`)
                             return;
                         }
+
+                        if (this.android.armeabi)
+                            archs.push('armeabi');
+                        if (this.android.armeabiV7a)
+                            archs.push('armeabi-v7a');
+                        if (this.android.arm64V8a)
+                            archs.push('arm64-v8a');
+                        if (this.android.x86)
+                            archs.push('x86');
+
                     }
-                    this.startTask('compile');
-
-                    compilePrebuiltLibs()
-                },
-
-                _onStopCompileClick: function(event) {
-                    event.stopPropagation();
-                    Editor.log(`_onStopCompileClick`);
-                    this.task = '';
-                    // Editor.Ipc.sendToMain('app:stop-compile');
+                    loader.hidden = false;
+                    compilePrebuiltLibs(this.selectedPlatform, archs.join(':'), this.android.selectedAPILevel);
                 }
             }
         });
-
-        Editor.log("test");
-
     },
+    close: function() {
+        Editor.log(`binary-creator, close ...`);
+        Editor.Ipc.sendToMain('binary-creator:stop-compile');
+    }
 });
