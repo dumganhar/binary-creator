@@ -1,18 +1,18 @@
 {
   "name": "binary-creator",
   "version": "0.0.1",
-  "description": "生成预编译库",
+  "description": "i18n:binary-creator.title",
   "author": "James Chen",
   "main": "main.js",
   "main-menu": {
-    "快捷工具/生成预编译库": { 
+    "i18n:binary-creator.convenient_tools/i18n:binary-creator.title": {
       "message": "binary-creator:open"
     }
   },
   "panel": {
     "main": "panel/panel.js",
     "type": "dockable",
-    "title": "生成预编译库",
+    "title": "i18n:binary-creator.title",
     "width": 600,
     "min-width": 500,
     "height": 220,
