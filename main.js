@@ -123,6 +123,51 @@ function initCocosEnv(opts) {
     return null;
 }
 
+function getSysEncoding(cb) {
+    let encoding = 'utf-8';
+    let encodingScript = Fs.readFileSync(Editor.url('unpack://utils/locale-encoding.py'));
+
+    try {
+        let child;
+        try {
+            if (process.platform === 'darwin') {
+                child = Spawn('python', ['-c', encodingScript]);
+            } else {
+                child = Spawn(pyPath, ['-c', encodingScript]);
+            }
+        } catch (err) {
+            if (cb) cb(err);
+            return;
+        }
+
+        child.stdout.on('data', function(data) {
+            let content = data.toString();
+
+            if (content) {
+                encoding = content;
+            }
+        });
+        child.stderr.on('data', function(data) {
+            Editor.failed(data.toString());
+        });
+        child.on('close', function() {
+            if (cb) {
+                cb(null, encoding);
+            }
+        });
+        child.on('error', function(err) {
+            if (cb) {
+                cb(err);
+            }
+        });
+    } catch (err) {
+        Editor.log('Get locale encoding failed, use utf-8 encoding');
+        if (cb) {
+            cb(null, encoding);
+        }
+    }
+}
+
 /**
  * @param    {ChildProcess}     child        child process
  * @param    {Object}     opts
@@ -229,13 +274,13 @@ function handleChildProcess(child, opts, callback) {
         });
     }
 
-    //cjh if (opts.useSystemEncoding) {
-    //         getSysEncoding((err, result) => {
-    //                 encoding = result;
-    //                 registerEvents();
-    //         });
-    //         return;
-    // }
+    if (opts.useSystemEncoding) {
+        getSysEncoding((err, result) => {
+            encoding = result;
+            registerEvents();
+        });
+        return;
+    }
 
     registerEvents();
 }
