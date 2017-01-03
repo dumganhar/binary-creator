@@ -378,6 +378,12 @@ module.exports = {
 
     messages: {
         'binary-creator:open' () {
+            Editor.Metrics.trackEvent({
+                category: 'Packages',
+                label: 'binary-creator',
+                action: 'Panel Open'
+              }, null);
+
             Editor.Panel.open('binary-creator');
         },
         'start-compile' (event, args, spawnOpts) {
