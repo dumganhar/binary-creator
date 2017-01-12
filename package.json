@@ -1,6 +1,6 @@
 {
   "name": "binary-creator",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "i18n:binary-creator.title",
   "author": "James Chen",
   "main": "main.js",
